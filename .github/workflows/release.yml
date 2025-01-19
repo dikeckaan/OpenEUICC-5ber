@@ -6,7 +6,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:focal
-      options: --user 1000:1000
       volumes:
         - android-app-keystore:/keystore
         - ${{ github.workspace }}:${{ github.workspace }}
@@ -14,6 +13,8 @@ jobs:
       - name: Fix Permissions
         run: |
           echo "Fixing permissions for workspace..."
+          whoami
+          su root
           chown -R $(id -u):$(id -g) $GITHUB_WORKSPACE
 
       - name: Checkout Repository

@@ -1,34 +1,37 @@
 on:
   workflow_dispatch:
-  
+
 jobs:
   release:
-    runs-on: [docker, android-app-certs]
+    runs-on: [ubuntu-latest]
     container:
+      image: mcr.microsoft.com/playwright:focal
+      options: --user 1000:1000
       volumes:
         - android-app-keystore:/keystore
     steps:
-      - name: Repository Checkout
-        uses: https://gitea.angry.im/actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
         with:
           submodules: recursive
           fetch-depth: 0
 
       - name: Decode Secret Signing Configuration
-        uses: https://gitea.angry.im/actions/base64-to-file@v1
-        with:
-          fileName: keystore.properties
-          fileDir: ${{ env.GITHUB_WORKSPACE }}
-          encodedString: ${{ secrets.OPENEUICC_SIGNING_CONFIG }}
+        run: |
+          echo ${{ secrets.OPENEUICC_SIGNING_CONFIG }} | base64 --decode > $GITHUB_WORKSPACE/keystore.properties
 
       - name: Set up JDK 17
-        uses: https://gitea.angry.im/actions/setup-java@v3
+        uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
       - name: Setup Android SDK
-        uses: https://gitea.angry.im/actions/setup-android@v3
+        uses: android-actions/setup-android@v2
+        with:
+          api-level: 33
+          build-tools: 33.0.2
+          ndk-version: 25.1.8937393
 
       - name: Build Release APK (Unprivileged / EasyEUICC only)
         run: ./gradlew --no-daemon :app-unpriv:assembleRelease
@@ -36,13 +39,21 @@ jobs:
       - name: Copy Debug Symbols to Release Path
         run: cp app-unpriv/build/outputs/native-debug-symbols/release/native-debug-symbols.zip app-unpriv/build/outputs/apk/release/
 
-      - name: Create Release
-        uses: https://gitea.angry.im/actions/forgejo-release@v1
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
         with:
-          direction: upload
-          release-dir: app-unpriv/build/outputs/apk/release
-          url: https://gitea.angry.im
-          token: ${{ secrets.FORGEJO_TOKEN }}
-          # Release details are expected to be edited manually
-          release-notes: TBD
-          prerelease: 'true'
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: "Release notes will be updated manually."
+          draft: true
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Assets
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: app-unpriv/build/outputs/apk/release/native-debug-symbols.zip
+          asset_name: native-debug-symbols.zip
+          asset_content_type: application/zip

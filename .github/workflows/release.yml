@@ -20,7 +20,6 @@ jobs:
           whoami
           su root
           chown -R $(id -u):$(id -g) $GITHUB_WORKSPACE
-          git submodule update --init
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
@@ -45,6 +44,7 @@ jobs:
 
       - name: Ensure keystore.properties Exists
         run: |
+          git submodule update --init
           echo "Ensuring keystore.properties exists..."
           if [ ! -f "$GITHUB_WORKSPACE/keystore.properties" ]; then
             echo "storePassword=my-store-password" > $GITHUB_WORKSPACE/keystore.properties

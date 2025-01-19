@@ -14,8 +14,7 @@ jobs:
       - name: Fix Permissions
         run: |
           echo "Fixing permissions for workspace..."
-          apt install sudo
-          sudo chown -R $(id -u):$(id -g) $GITHUB_WORKSPACE
+          chown -R $(id -u):$(id -g) $GITHUB_WORKSPACE
 
       - name: Checkout Repository
         uses: actions/checkout@v4

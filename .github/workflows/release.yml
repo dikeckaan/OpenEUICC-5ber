@@ -13,6 +13,8 @@ jobs:
       - name: Fix Permissions
         run: |
           echo "Fixing permissions for workspace..."
+          apt update
+          apt upgrade -y
           apt install unzip
           whoami
           su root

@@ -13,6 +13,7 @@ jobs:
       - name: Fix Permissions
         run: |
           echo "Fixing permissions for workspace..."
+          apt install unzip
           whoami
           su root
           chown -R $(id -u):$(id -g) $GITHUB_WORKSPACE

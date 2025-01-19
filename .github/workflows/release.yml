@@ -20,6 +20,7 @@ jobs:
           whoami
           su root
           chown -R $(id -u):$(id -g) $GITHUB_WORKSPACE
+          git submodule update --init
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:

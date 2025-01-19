@@ -9,7 +9,13 @@ jobs:
       options: --user 1000:1000
       volumes:
         - android-app-keystore:/keystore
+        - ${{ github.workspace }}:${{ github.workspace }}
     steps:
+      - name: Fix Permissions
+        run: |
+          echo "Fixing permissions for workspace..."
+          sudo chown -R $(id -u):$(id -g) $GITHUB_WORKSPACE
+
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:

@@ -16,7 +16,7 @@ jobs:
           echo "Fixing permissions for workspace..."
           apt update
           apt upgrade -y
-          apt install unzip keytool
+          apt install unzip openjdk-17-jdk
           whoami
           su root
           chown -R $(id -u):$(id -g) $GITHUB_WORKSPACE

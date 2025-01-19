@@ -1,7 +1,6 @@
 on:
-  push:
-    tags: '*'
-
+  workflow_dispatch:
+  
 jobs:
   release:
     runs-on: [docker, android-app-certs]

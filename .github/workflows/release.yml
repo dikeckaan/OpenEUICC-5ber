@@ -16,7 +16,7 @@ jobs:
           echo "Fixing permissions for workspace..."
           apt update
           apt upgrade -y
-          apt install unzip
+          apt install unzip keytool
           whoami
           su root
           chown -R $(id -u):$(id -g) $GITHUB_WORKSPACE

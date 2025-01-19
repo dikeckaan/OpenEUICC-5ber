@@ -1,0 +1,61 @@
+on:
+  workflow_dispatch:
+
+
+jobs:
+  build-debug:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:focal
+      volumes:
+        - android-app-keystore:/keystore
+    steps:
+      - name: Fix Permissions
+        run: |
+          echo "Fixing permissions for workspace..."
+          apt update
+          apt upgrade -y
+          apt install unzip
+          whoami
+          su root
+          chown -R $(id -u):$(id -g) $GITHUB_WORKSPACE
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Decode Secret Signing Configuration
+        run: |
+          echo "Decoding secret signing configuration..."
+          echo ${{ secrets.OPENEUICC_SIGNING_CONFIG }} | base64 --decode > $GITHUB_WORKSPACE/keystore.properties
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+        with:
+          api-level: 33
+          build-tools: 33.0.2
+          ndk-version: 25.1.8937393
+
+      - name: Build Debug APKs
+        run: |
+          echo "Building debug APKs..."
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Copy Artifacts
+        run: |
+          echo "Copying artifacts..."
+          find . -name 'app*-debug.apk' -exec cp {} . \;
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: Debug APKs
+          path: app*-debug.apk

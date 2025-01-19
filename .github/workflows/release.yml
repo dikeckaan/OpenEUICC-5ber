@@ -31,6 +31,12 @@ jobs:
           echo "Updating submodules..."
           git submodule update --init
 
+      - name: Generate Keystore File
+        run: |
+          echo "Generating keystore file..."
+          keytool -genkey -v -keystore $GITHUB_WORKSPACE/my-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass my-store-password -keypass my-key-password -alias my-key -dname "CN=Example, OU=Example, O=Example, L=City, S=State, C=US"
+
       - name: Decode Secret Signing Configuration
         run: |
           echo "Decoding secret signing configuration..."
@@ -41,11 +47,11 @@ jobs:
           echo "Ensuring keystore.properties exists..."
           if [ ! -f "$GITHUB_WORKSPACE/keystore.properties" ]; then
             echo "storePassword=my-store-password" > $GITHUB_WORKSPACE/keystore.properties
-            echo "keyPassword=my-password" >> $GITHUB_WORKSPACE/keystore.properties
+            echo "keyPassword=my-key-password" >> $GITHUB_WORKSPACE/keystore.properties
             echo "keyAlias=my-key" >> $GITHUB_WORKSPACE/keystore.properties
             echo "unprivKeyPassword=my-unpriv-password" >> $GITHUB_WORKSPACE/keystore.properties
             echo "unprivKeyAlias=my-unpriv-key" >> $GITHUB_WORKSPACE/keystore.properties
-            echo "storeFile=/path/to/android/keystore" >> $GITHUB_WORKSPACE/keystore.properties
+            echo "storeFile=$GITHUB_WORKSPACE/my-release-key.jks" >> $GITHUB_WORKSPACE/keystore.properties
           fi
 
       - name: Set up JDK 17
@@ -74,7 +80,7 @@ jobs:
       - name: Copy Artifacts
         run: |
           echo "Copying artifacts..."
-          find . -name '*.apk' -exec cp {} . \;
+          find . -name 'app*-release.apk' -exec cp {} . \;
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3

@@ -3,7 +3,7 @@ on:
 
 jobs:
   release:
-    runs-on: [ubuntu-latest]
+    runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:focal
       options: --user 1000:1000
@@ -18,6 +18,7 @@ jobs:
 
       - name: Decode Secret Signing Configuration
         run: |
+          echo "Decoding secret signing configuration..."
           echo ${{ secrets.OPENEUICC_SIGNING_CONFIG }} | base64 --decode > $GITHUB_WORKSPACE/keystore.properties
 
       - name: Set up JDK 17
@@ -34,12 +35,17 @@ jobs:
           ndk-version: 25.1.8937393
 
       - name: Build Release APK (Unprivileged / EasyEUICC only)
-        run: ./gradlew --no-daemon :app-unpriv:assembleRelease
+        run: |
+          echo "Building release APK for EasyEUICC..."
+          ./gradlew --no-daemon :app-unpriv:assembleRelease
 
       - name: Copy Debug Symbols to Release Path
-        run: cp app-unpriv/build/outputs/native-debug-symbols/release/native-debug-symbols.zip app-unpriv/build/outputs/apk/release/
+        run: |
+          echo "Copying debug symbols to release path..."
+          cp app-unpriv/build/outputs/native-debug-symbols/release/native-debug-symbols.zip app-unpriv/build/outputs/apk/release/
 
       - name: Create GitHub Release
+        id: create_release
         uses: actions/create-release@v1
         with:
           tag_name: ${{ github.ref_name }}
